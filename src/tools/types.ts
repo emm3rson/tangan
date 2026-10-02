@@ -7,6 +7,5 @@ export interface ToolDefinition {
   name: string
   description: string
   icon: ComponentType<{ size?: number }>
-  route: string
   component: ComponentType
 }

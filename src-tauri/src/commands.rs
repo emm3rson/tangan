@@ -13,6 +13,24 @@ use crate::models::{
 use crate::services;
 use crate::tools;
 
+fn emit_processing_progress(
+  app: &tauri::AppHandle,
+  job_id: &str,
+  completed: u32,
+  total: u32,
+  filename: &str,
+) {
+  let _ = app.emit(
+    services::batch::EVENT_PROGRESS,
+    ProcessingProgress {
+      job_id: job_id.to_string(),
+      completed,
+      total,
+      current_file: Some(filename.to_string()),
+    },
+  );
+}
+
 #[tauri::command]
 pub async fn extract_color_palette(
   request: ExtractColorPaletteRequest,
@@ -64,7 +82,6 @@ pub async fn convert_images(
   let resize = request.resize;
 
   tauri::async_runtime::spawn_blocking(move || {
-    let progress_job_id = job_id.clone();
     services::batch::run_batch(
       &files,
       |source| {
@@ -78,15 +95,7 @@ pub async fn convert_images(
         )
       },
       move |completed, total, filename| {
-        let _ = app.emit(
-          services::batch::EVENT_PROGRESS,
-          ProcessingProgress {
-            job_id: progress_job_id.clone(),
-            completed,
-            total,
-            current_file: Some(filename.to_string()),
-          },
-        );
+        emit_processing_progress(&app, &job_id, completed, total, filename)
       },
     )
   })
@@ -112,22 +121,13 @@ pub async fn compress_images(
   let resize = request.resize;
 
   tauri::async_runtime::spawn_blocking(move || {
-    let progress_job_id = job_id.clone();
     services::batch::run_batch(
       &files,
       |source| {
         tools::image::compress::compress_file(source, &output_dir, quality, png_level, &resize)
       },
       move |completed, total, filename| {
-        let _ = app.emit(
-          services::batch::EVENT_PROGRESS,
-          ProcessingProgress {
-            job_id: progress_job_id.clone(),
-            completed,
-            total,
-            current_file: Some(filename.to_string()),
-          },
-        );
+        emit_processing_progress(&app, &job_id, completed, total, filename)
       },
     )
   })
@@ -154,15 +154,7 @@ pub async fn generate_logo_pack(
       &output_dir,
       &asset_ids,
       |completed, total, filename| {
-        let _ = app.emit(
-          services::batch::EVENT_PROGRESS,
-          ProcessingProgress {
-            job_id: job_id.clone(),
-            completed,
-            total,
-            current_file: Some(filename.to_string()),
-          },
-        );
+        emit_processing_progress(&app, &job_id, completed, total, filename)
       },
     )
   })
@@ -205,20 +197,11 @@ pub async fn convert_pdfs(
   let files: Vec<PathBuf> = request.files.iter().map(PathBuf::from).collect();
 
   tauri::async_runtime::spawn_blocking(move || {
-    let progress_job_id = job_id.clone();
     services::batch::run_sequential_batch(
       &files,
       |source| tools::pdf::convert::convert_pdf_file(source, &output_dir),
       move |completed, total, filename| {
-        let _ = app.emit(
-          services::batch::EVENT_PROGRESS,
-          ProcessingProgress {
-            job_id: progress_job_id.clone(),
-            completed,
-            total,
-            current_file: Some(filename.to_string()),
-          },
-        );
+        emit_processing_progress(&app, &job_id, completed, total, filename)
       },
     )
   })

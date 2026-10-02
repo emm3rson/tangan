@@ -6,7 +6,7 @@ Toolbox is a local-first Windows desktop utility application built with Tauri 2,
 
 Toolbox includes seven focused utilities:
 
-- **Image Converter**: Convert between PNG, JPG, WebP, and SVG formats. Supports aspect-preserving resizing (fixed dimensions or percentage), lossy quality tuning, and lossless PNG optimization.
+- **Image Converter**: Convert PNG, JPG, WebP, or SVG inputs to PNG, JPG, or WebP. Supports aspect-preserving resizing (fixed dimensions or percentage), lossy quality tuning, and lossless PNG optimization.
 - **Image Compressor**: Format-aware file size reduction. Applies multi-step lossless optimization via `oxipng` for PNG files, and calibrated quality encoding for JPG and WebP.
 - **Web Logo Pack**: Generates a standard web asset pack from a single square raster image or vector SVG. Produces multi-resolution `favicon.ico` (16, 32, 48 px), standard PNG favicons (16x16, 32x32, 192x192, 512x512), and `apple-touch-icon.png`, accompanied by a ready-to-paste HTML snippet.
 - **PDF to Markdown**: Fast offline text and structure extraction from PDF documents to Markdown via `pdf-inspector`, with explicit markers for pages requiring OCR.
@@ -18,7 +18,7 @@ Toolbox includes seven focused utilities:
 
 - **Local-First & Private**: Processing occurs entirely on your device. The app makes no network calls, contains no telemetry, and uses self-hosted typography.
 - **Non-Destructive**: Output files never overwrite source originals. Collisions are automatically avoided through numbered filename suffixes.
-- **Transactional & Safe**: Batch jobs isolate file failures, verify output integrity before replacing temporary files, and cleanly clean up partial artifacts on cancellation.
+- **Transactional & Safe**: Batch jobs isolate file failures. Video and PDF optimization jobs verify temporary outputs before committing them and remove partial artifacts on cancellation.
 
 ## Requirements
 
@@ -47,9 +47,12 @@ Toolbox includes seven focused utilities:
 | `npm run dev` | Run the frontend Vite dev server in isolation (browser UI only) |
 | `npm run build` | Type-check TypeScript and build the production frontend bundle |
 | `npm run test` | Run frontend unit and integration tests using Vitest |
+| `npm run test:release` | Verify release version and lockfile updates in temporary copies |
 | `npm run lint` | Run ESLint across frontend TypeScript sources |
+| `npm run typecheck` | Check TypeScript without building |
+| `npm run format:check` | Check frontend formatting with Prettier |
 | `npm run prepare:binaries` | Download and stage hash-pinned FFmpeg and qpdf runtime binaries |
-| `npm run tauri build` | Build optimized release binaries and package the per-user NSIS installer |
+| `npm run tauri -- build` | Build optimized release binaries and package the per-user NSIS installer |
 | `cargo check --manifest-path src-tauri/Cargo.toml` | Check native Rust sources for compiler diagnostics |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | Execute Rust unit and integration test suites |
 
@@ -58,6 +61,12 @@ Toolbox includes seven focused utilities:
 - **Frontend**: React 19, TypeScript 5.9, Vite, and Tailwind CSS. The frontend manages user interaction, queue presentation, and tool configuration.
 - **Native Core**: Tauri 2 with Rust. Handles file decoding, encoding, batch concurrency, and child process execution via typed IPC commands (`src-tauri/src/`).
 - **Engines & Crates**: `oxipng` for PNG optimization, `image` and `resvg` for image and vector processing, `pdf-inspector` for PDF text extraction, `kmeans_colors` for palette clustering, bundled `ffmpeg` for video transcoding, and bundled `qpdf` for PDF stream optimization.
+
+See [PROJECT.md](docs/PROJECT.md) for tool boundaries and maintenance,
+[UI_RULES.md](docs/UI_RULES.md) for interface conventions, and
+[RELEASE_RUNBOOK.md](docs/RELEASE_RUNBOOK.md) for release checks. The
+[build helper](scripts/README.md) can synchronize versions, validate, and package
+without launching the installer.
 
 ## License
 

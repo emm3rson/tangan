@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rayon::prelude::*;
@@ -21,7 +21,7 @@ const MAX_WORKER_THREADS: usize = 4;
 /// agnostic so it is unit-testable without a Tauri app; commands wrap it in
 /// `app.emit` (like `logo_pack::generate`).
 pub fn run_batch<F, P>(
-  files: &[std::path::PathBuf],
+  files: &[PathBuf],
   process: F,
   on_progress: P,
 ) -> Result<BatchResult, ProcessingError>
@@ -31,12 +31,7 @@ where
 {
   let total = files.len();
   if files.is_empty() {
-    return Ok(BatchResult {
-      total: 0,
-      succeeded: 0,
-      failed: 0,
-      items: Vec::new(),
-    });
+    return Ok(summarize(Vec::new()));
   }
 
   let items: Vec<FileResult> = if total == 1 {
@@ -66,19 +61,13 @@ where
     })
   };
 
-  let succeeded = items.iter().filter(|item| item.success).count();
-  Ok(BatchResult {
-    total: total as u32,
-    succeeded: succeeded as u32,
-    failed: (total - succeeded) as u32,
-    items,
-  })
+  Ok(summarize(items))
 }
 
 /// Processes files sequentially with 1-by-1 progress reporting.
 /// Used for PDF conversion where the parser already handles internal parallelism.
 pub fn run_sequential_batch<F, P>(
-  files: &[std::path::PathBuf],
+  files: &[PathBuf],
   process: F,
   on_progress: P,
 ) -> Result<BatchResult, ProcessingError>
@@ -88,12 +77,7 @@ where
 {
   let total = files.len();
   if files.is_empty() {
-    return Ok(BatchResult {
-      total: 0,
-      succeeded: 0,
-      failed: 0,
-      items: Vec::new(),
-    });
+    return Ok(summarize(Vec::new()));
   }
 
   let mut items = Vec::with_capacity(total);
@@ -103,13 +87,18 @@ where
     items.push(result);
   }
 
+  Ok(summarize(items))
+}
+
+fn summarize(items: Vec<FileResult>) -> BatchResult {
+  let total = items.len();
   let succeeded = items.iter().filter(|item| item.success).count();
-  Ok(BatchResult {
+  BatchResult {
     total: total as u32,
     succeeded: succeeded as u32,
     failed: (total - succeeded) as u32,
     items,
-  })
+  }
 }
 
 fn worker_threads() -> usize {
@@ -128,10 +117,10 @@ mod tests {
   use std::path::PathBuf;
   use std::sync::atomic::{AtomicU32, Ordering};
 
-  use crate::models::{ImageFormat, ResizeOptions};
+  use crate::models::{FileResult, ImageFormat, ResizeOptions};
   use crate::tools::image::convert::convert_file;
 
-  use super::run_batch;
+  use super::{run_batch, run_sequential_batch};
 
   static COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -203,6 +192,57 @@ mod tests {
     assert_eq!(result.succeeded, 0);
     assert_eq!(result.failed, 0);
     assert!(result.items.is_empty());
+  }
+
+  #[test]
+  fn empty_sequential_batch_returns_empty_result() {
+    let result = run_sequential_batch(&[], |_| unreachable!(), noop_progress).unwrap();
+    assert_eq!(result.total, 0);
+    assert_eq!(result.succeeded, 0);
+    assert_eq!(result.failed, 0);
+    assert!(result.items.is_empty());
+  }
+
+  #[test]
+  fn parallel_and_sequential_batches_preserve_order_and_counts() {
+    let files = vec![PathBuf::from("first.png"), PathBuf::from("second.png")];
+    let process = |source: &std::path::Path| {
+      let source_path = source.to_string_lossy().into_owned();
+      FileResult {
+        success: source.file_name().is_some_and(|name| name == "first.png"),
+        source_path,
+        output_path: None,
+        original_size: 0,
+        output_size: None,
+        error: None,
+        warnings: None,
+      }
+    };
+
+    for result in [
+      run_batch(&files, process, noop_progress).unwrap(),
+      run_sequential_batch(&files, process, noop_progress).unwrap(),
+    ] {
+      assert_eq!(result.total, 2);
+      assert_eq!(result.succeeded, 1);
+      assert_eq!(result.failed, 1);
+      assert_eq!(
+        result
+          .items
+          .iter()
+          .map(|item| item.source_path.as_str())
+          .collect::<Vec<_>>(),
+        vec!["first.png", "second.png"]
+      );
+      assert_eq!(
+        result
+          .items
+          .iter()
+          .map(|item| item.success)
+          .collect::<Vec<_>>(),
+        vec![true, false]
+      );
+    }
   }
 
   #[test]

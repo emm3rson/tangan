@@ -75,7 +75,7 @@ describe('pdf optimizer registration', () => {
   it('exposes correct launcher copy', () => {
     expect(pdfOptimizerDefinition.name).toBe('Optimize PDFs')
     expect(pdfOptimizerDefinition.description).toBe('Reduce PDF file size while preserving quality.')
-    expect(pdfOptimizerDefinition.route).toBe('/optimize-pdf')
+    expect(pdfOptimizerDefinition.id).toBe('optimize-pdf')
   })
 })
 

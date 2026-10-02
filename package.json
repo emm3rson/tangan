@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:release": "node --test scripts/versioning.test.mjs",
     "lint": "eslint src --max-warnings 0",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "prepare:binaries": "pwsh -ExecutionPolicy Bypass -File src-tauri/scripts/prepare-ffmpeg.ps1 && pwsh -ExecutionPolicy Bypass -File src-tauri/scripts/prepare-qpdf.ps1",

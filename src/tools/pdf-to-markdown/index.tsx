@@ -17,6 +17,7 @@ import {
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
 import type { ToolDefinition } from '../types'
+import { appendUniqueByPath, getErrorMessage } from '../shared/file-utils'
 
 type Phase = 'empty' | 'editing' | 'processing' | 'done'
 
@@ -34,13 +35,7 @@ export function PdfToMarkdown() {
     if (selected.length === 0) return
     const inspected = await desktop.inspectPdfs(selected)
     if (inspected.length === 0) return
-    setFiles((prev) => {
-      const existingPaths = new Set(prev.map((file) => file.path.toLowerCase()))
-      const fresh = inspected.filter(
-        (file) => !existingPaths.has(file.path.toLowerCase())
-      )
-      return [...prev, ...fresh]
-    })
+    setFiles((prev) => appendUniqueByPath(prev, inspected))
     setPhase('editing')
   }
 
@@ -100,11 +95,7 @@ export function PdfToMarkdown() {
       setPhase('done')
     } catch (e) {
       setPhase('editing')
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -277,6 +268,5 @@ export const pdfToMarkdownDefinition: ToolDefinition = {
   name: 'Convert PDF to Markdown',
   description: 'Turn local PDFs into clean, editable Markdown.',
   icon: DocumentIcon,
-  route: '/pdf-markdown',
   component: PdfToMarkdown,
 }

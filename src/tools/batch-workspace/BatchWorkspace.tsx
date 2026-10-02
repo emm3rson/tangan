@@ -19,6 +19,7 @@ import {
   type ResizeOptions,
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
+import { appendUniqueByPath, getErrorMessage } from '../shared/file-utils'
 
 type Phase = 'empty' | 'editing' | 'processing' | 'done'
 
@@ -85,13 +86,7 @@ export function BatchWorkspace({ mode }: { mode: 'convert' | 'compress' }) {
       }
       return file
     })
-    setFiles((prev) => {
-      const existingPaths = new Set(prev.map((file) => file.path.toLowerCase()))
-      const fresh = processedInspected.filter(
-        (file) => !existingPaths.has(file.path.toLowerCase())
-      )
-      return [...prev, ...fresh]
-    })
+    setFiles((prev) => appendUniqueByPath(prev, processedInspected))
     setError(undefined)
     setPhase('editing')
   }
@@ -168,11 +163,7 @@ export function BatchWorkspace({ mode }: { mode: 'convert' | 'compress' }) {
       setPhase('done')
     } catch (e) {
       setPhase('editing')
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 

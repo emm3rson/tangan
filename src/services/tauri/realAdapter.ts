@@ -4,50 +4,86 @@ import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import packageJson from '../../../package.json'
-import type { BatchResult, ExportColorPaletteResult, ExtractColorPaletteResult, GenerateLogoPackResult, InputFile, LogoAssetDefinition, OptimizePdfBatchResult, PdfOptimizationProgress, ProcessingProgress, ProgressHandler, TauriAdapter, VideoBatchResult, VideoProcessingProgress } from './contracts'
+import type {
+  BatchResult,
+  ExportColorPaletteResult,
+  ExtractColorPaletteResult,
+  GenerateLogoPackResult,
+  InputFile,
+  LogoAssetDefinition,
+  OptimizePdfBatchResult,
+  ProcessingProgress,
+  ProgressHandler,
+  SequentialProcessingProgress,
+  TauriAdapter,
+  VideoBatchResult
+} from './contracts'
 
-const IMAGE_FILTERS = [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg'] }]
-const COMPRESS_FILTERS = [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+const IMAGE_FILTERS = [
+  { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg'] }
+]
+const COMPRESS_FILTERS = [
+  { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }
+]
 const PDF_FILTERS = [{ name: 'PDF Documents', extensions: ['pdf'] }]
-const VIDEO_FILTERS = [{ name: 'Videos', extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi'] }]
+const VIDEO_FILTERS = [
+  { name: 'Videos', extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi'] }
+]
 const PROCESSING_EVENT = 'processing-progress'
 const VIDEO_PROGRESS_EVENT = 'video-progress'
 const PDF_OPTIMIZE_PROGRESS_EVENT = 'pdf-optimize-progress'
 
-async function runWithProgress<T>(command: string, request: object, onProgress?: ProgressHandler): Promise<T> {
-  const jobId = crypto.randomUUID()
+async function invokeWithProgress<T, P extends { jobId: string }>(
+  command: string,
+  request: { jobId: string },
+  eventName: string,
+  onProgress?: (progress: P) => void
+): Promise<T> {
   const unlisten = onProgress
-    ? await listen<ProcessingProgress>(PROCESSING_EVENT, (event) => {
-        if (event.payload.jobId === jobId) onProgress(event.payload)
+    ? await listen<P>(eventName, (event) => {
+        if (event.payload.jobId === request.jobId) onProgress(event.payload)
       })
     : undefined
   try {
-    return await invoke<T>(command, { request: { ...request, jobId } })
+    return await invoke<T>(command, { request })
   } finally {
     unlisten?.()
   }
 }
 
+async function runWithProgress<T>(
+  command: string,
+  request: object,
+  onProgress?: ProgressHandler
+): Promise<T> {
+  return invokeWithProgress<T, ProcessingProgress>(
+    command,
+    { ...request, jobId: crypto.randomUUID() },
+    PROCESSING_EVENT,
+    onProgress
+  )
+}
+
 export const realAdapter: TauriAdapter = {
   async pickFiles(mode) {
-    if (mode === 'logo' || mode === 'palette') {
-      const selected = await open({ multiple: false, directory: false, filters: IMAGE_FILTERS })
-      return selected === null ? [] : [selected]
-    }
-    if (mode === 'pdf') {
-      const selected = await open({ multiple: true, directory: false, filters: PDF_FILTERS })
-      return selected ?? []
-    }
-    if (mode === 'video') {
-      const selected = await open({ multiple: true, directory: false, filters: VIDEO_FILTERS })
-      return selected ?? []
-    }
-    if (mode === 'compress') {
-      const selected = await open({ multiple: true, directory: false, filters: COMPRESS_FILTERS })
-      return selected ?? []
-    }
-    const selected = await open({ multiple: true, directory: false, filters: IMAGE_FILTERS })
-    return selected ?? []
+    const filters =
+      mode === 'pdf'
+        ? PDF_FILTERS
+        : mode === 'video'
+          ? VIDEO_FILTERS
+          : mode === 'compress'
+            ? COMPRESS_FILTERS
+            : IMAGE_FILTERS
+    const selected = await open({
+      multiple: mode !== 'logo' && mode !== 'palette',
+      directory: false,
+      filters
+    })
+    return selected === null
+      ? []
+      : Array.isArray(selected)
+        ? selected
+        : [selected]
   },
   async pickFolder() {
     return open({ directory: true })
@@ -74,34 +110,28 @@ export const realAdapter: TauriAdapter = {
     return runWithProgress<BatchResult>('convert_pdfs', request, onProgress)
   },
   generateLogoPack(request, onProgress) {
-    return runWithProgress<GenerateLogoPackResult>('generate_logo_pack', request, onProgress)
+    return runWithProgress<GenerateLogoPackResult>(
+      'generate_logo_pack',
+      request,
+      onProgress
+    )
   },
-  async processVideos(request, onProgress) {
-    const unlisten = onProgress
-      ? await listen<VideoProcessingProgress>(VIDEO_PROGRESS_EVENT, (event) => {
-          if (event.payload.jobId === request.jobId) onProgress(event.payload)
-        })
-      : undefined
-    try {
-      return await invoke<VideoBatchResult>('process_videos', { request })
-    } finally {
-      unlisten?.()
-    }
+  processVideos(request, onProgress) {
+    return invokeWithProgress<VideoBatchResult, SequentialProcessingProgress>(
+      'process_videos',
+      request,
+      VIDEO_PROGRESS_EVENT,
+      onProgress
+    )
   },
   async cancelVideoJob(jobId) {
     await invoke('cancel_video_job', { jobId })
   },
-  async optimizePdfs(request, onProgress) {
-    const unlisten = onProgress
-      ? await listen<PdfOptimizationProgress>(PDF_OPTIMIZE_PROGRESS_EVENT, (event) => {
-          if (event.payload.jobId === request.jobId) onProgress(event.payload)
-        })
-      : undefined
-    try {
-      return await invoke<OptimizePdfBatchResult>('optimize_pdfs', { request })
-    } finally {
-      unlisten?.()
-    }
+  optimizePdfs(request, onProgress) {
+    return invokeWithProgress<
+      OptimizePdfBatchResult,
+      SequentialProcessingProgress
+    >('optimize_pdfs', request, PDF_OPTIMIZE_PROGRESS_EVENT, onProgress)
   },
   async cancelPdfOptimizationJob(jobId) {
     await invoke('cancel_pdf_optimization_job', { jobId })
@@ -113,7 +143,9 @@ export const realAdapter: TauriAdapter = {
     return invoke<LogoAssetDefinition[]>('get_logo_presets')
   },
   async extractColorPalette(request) {
-    return invoke<ExtractColorPaletteResult>('extract_color_palette', { request })
+    return invoke<ExtractColorPaletteResult>('extract_color_palette', {
+      request
+    })
   },
   async exportColorPalette(request) {
     return invoke<ExportColorPaletteResult>('export_color_palette', { request })
@@ -124,5 +156,5 @@ export const realAdapter: TauriAdapter = {
     } catch {
       return packageJson.version
     }
-  },
+  }
 }

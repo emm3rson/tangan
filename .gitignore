@@ -5,6 +5,4 @@ src-tauri/resources/ffmpeg/
 src-tauri/resources/qpdf/
 *.log
 .DS_Store
-docs/
-CHANGELOG.md
 AGENTS.md

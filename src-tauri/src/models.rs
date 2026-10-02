@@ -143,6 +143,38 @@ pub struct InputFile {
   pub error: Option<String>,
 }
 
+impl InputFile {
+  pub fn new(path: &str, size: u64) -> Self {
+    let path_info = std::path::Path::new(path);
+    let name = path_info
+      .file_name()
+      .map(|name| name.to_string_lossy().into_owned())
+      .unwrap_or_else(|| path.to_string());
+    let extension = path_info
+      .extension()
+      .map(|ext| ext.to_string_lossy().to_lowercase())
+      .unwrap_or_default();
+
+    Self {
+      path: path.to_string(),
+      name,
+      extension,
+      size,
+      width: 0,
+      height: 0,
+      status: "invalid".into(),
+      duration: None,
+      error: None,
+    }
+  }
+
+  pub fn invalid(path: &str, size: u64, error: impl Into<String>) -> Self {
+    let mut file = Self::new(path, size);
+    file.error = Some(error.into());
+    file
+  }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum VideoOutputFormat {
@@ -402,6 +434,24 @@ pub struct ExportColorPaletteResult {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn input_file_constructor_normalizes_extension_and_defaults_metadata() {
+    let file = InputFile::new("C:/Files/Photo.JPEG", 123);
+
+    assert_eq!(file.path, "C:/Files/Photo.JPEG");
+    assert_eq!(file.name, "Photo.JPEG");
+    assert_eq!(file.extension, "jpeg");
+    assert_eq!(file.size, 123);
+    assert_eq!((file.width, file.height), (0, 0));
+    assert_eq!(file.status, "invalid");
+    assert_eq!(file.duration, None);
+    assert_eq!(file.error, None);
+
+    let invalid = InputFile::invalid("missing.pdf", 0, "File not found");
+    assert_eq!(invalid.status, "invalid");
+    assert_eq!(invalid.error.as_deref(), Some("File not found"));
+  }
 
   #[test]
   fn deserializes_convert_request_with_dimensions_camel_case() {

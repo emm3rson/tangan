@@ -237,8 +237,8 @@ pub fn inspect_video_paths(paths: Vec<String>) -> Vec<InputFile> {
       Ok(meta) if meta.is_file() => {
         out.push(inspect_video_file(&path, meta.len(), binaries.as_ref()))
       }
-      Ok(_) => out.push(invalid_video_file(&path, 0, "Not a regular file")),
-      Err(_) => out.push(invalid_video_file(&path, 0, "File not found")),
+      Ok(_) => out.push(InputFile::invalid(&path, 0, "Not a regular file")),
+      Err(_) => out.push(InputFile::invalid(&path, 0, "File not found")),
     }
   }
   out
@@ -275,7 +275,7 @@ fn expand_video_directory(path: &str, binaries: Option<&VideoBinaries>) -> Vec<I
 }
 
 fn inspect_video_file(path: &str, size: u64, binaries: Option<&VideoBinaries>) -> InputFile {
-  let mut file = base_video_input(path, size);
+  let mut file = InputFile::new(path, size);
 
   if !SUPPORTED_VIDEO_EXTENSIONS.contains(&file.extension.as_str()) {
     file.status = "invalid".into();
@@ -315,35 +315,6 @@ fn inspect_video_file(path: &str, size: u64, binaries: Option<&VideoBinaries>) -
     }
   }
 
-  file
-}
-
-fn base_video_input(path: &str, size: u64) -> InputFile {
-  let name = Path::new(path)
-    .file_name()
-    .map(|name| name.to_string_lossy().into_owned())
-    .unwrap_or_else(|| path.to_string());
-  let extension = Path::new(path)
-    .extension()
-    .map(|ext| ext.to_string_lossy().to_lowercase())
-    .unwrap_or_default();
-  InputFile {
-    path: path.to_string(),
-    name,
-    extension,
-    size,
-    width: 0,
-    height: 0,
-    status: "invalid".into(),
-    duration: None,
-    error: None,
-  }
-}
-
-fn invalid_video_file(path: &str, size: u64, error: &str) -> InputFile {
-  let mut file = base_video_input(path, size);
-  file.status = "invalid".into();
-  file.error = Some(error.into());
   file
 }
 

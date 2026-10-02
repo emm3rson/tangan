@@ -25,6 +25,7 @@ import {
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
 import type { ToolDefinition } from '../types'
+import { getErrorMessage } from '../shared/file-utils'
 
 const FALLBACK_PRESETS: LogoAssetDefinition[] = [
   {
@@ -256,11 +257,7 @@ export function WebLogoPack() {
       setPhase('done')
     } catch (e) {
       setPhase('valid')
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -562,6 +559,5 @@ export const webLogoPackDefinition: ToolDefinition = {
   name: 'Generate Logo Pack',
   description: 'Create favicons and app icons from a single logo.',
   icon: LogoPackIcon,
-  route: '/logo-pack',
   component: WebLogoPack,
 }

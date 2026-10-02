@@ -88,39 +88,46 @@ function Invoke-Bump([string]$current, [string]$kind) {
 function Set-Version([string]$newVersion) {
   Write-Step "Bumping version to $newVersion"
 
-  # package.json
-  $pkgPath = Join-Path $RepoRoot "package.json"
-  $pkgRaw = Get-Content $pkgPath -Raw
-  $pkgRaw = $pkgRaw -replace '"version"\s*:\s*"\d+\.\d+\.\d+"', "`"version`": `"$newVersion`""
-  $pkgRaw = $pkgRaw.TrimEnd("`r","`n") + "`r`n"
-  Set-Content -Path $pkgPath -Value $pkgRaw -Encoding UTF8 -NoNewline
-
-  # src-tauri/Cargo.toml - first occurrence of `version = "x.y.z"` under [package]
-  $cargoPath = Join-Path $RepoRoot "src-tauri/Cargo.toml"
-  $cargoRaw = Get-Content $cargoPath -Raw
-  $cargoRaw = $cargoRaw -replace '(?m)^version\s*=\s*"\d+\.\d+\.\d+"', "version = `"$newVersion`""
-  $cargoRaw = $cargoRaw.TrimEnd("`r","`n") + "`r`n"
-  Set-Content -Path $cargoPath -Value $cargoRaw -Encoding UTF8 -NoNewline
-
-  # src-tauri/tauri.conf.json
-  $tauriPath = Join-Path $RepoRoot "src-tauri/tauri.conf.json"
-  $tauriRaw = Get-Content $tauriPath -Raw
-  $tauriRaw = $tauriRaw -replace '"version"\s*:\s*"\d+\.\d+\.\d+"', "`"version`": `"$newVersion`""
-  $tauriRaw = $tauriRaw.TrimEnd("`r","`n") + "`r`n"
-  Set-Content -Path $tauriPath -Value $tauriRaw -Encoding UTF8 -NoNewline
-
-  Write-Host "  updated package.json, src-tauri/Cargo.toml, src-tauri/tauri.conf.json -> $newVersion" -ForegroundColor Green
-
-  # Keep Cargo.lock in sync so --locked checks don't fail after a bump
-  Write-Host "  updating Cargo.lock..." -ForegroundColor DarkGray
-  # --offline avoids network; generate-lockfile just rewrites lock without fetching
-  cargo generate-lockfile --manifest-path (Join-Path $RepoRoot "src-tauri/Cargo.toml") --offline 2>$null
-  if ($LASTEXITCODE -ne 0) {
-    # fallback: try cargo update for this package only
-    cargo update --manifest-path (Join-Path $RepoRoot "src-tauri/Cargo.toml") -p utility-desktop --offline 2>$null | Out-Null
+  $versionPaths = @(
+    "package.json", "package-lock.json", "src-tauri/Cargo.toml",
+    "src-tauri/Cargo.lock", "src-tauri/tauri.conf.json"
+  ) | ForEach-Object { Join-Path $RepoRoot $_ }
+  $originalContents = @{}
+  foreach ($versionPath in $versionPaths) {
+    $originalContents[$versionPath] = [System.IO.File]::ReadAllBytes($versionPath)
   }
-  # reset LASTEXITCODE so following checks don't see the generate-lockfile failure
-  $global:LASTEXITCODE = 0
+
+  try {
+    # Keep both npm manifests synchronized without install scripts or a Git tag.
+    npm version $newVersion --no-git-tag-version --ignore-scripts --allow-same-version
+    if ($LASTEXITCODE -ne 0) { throw "npm version update failed" }
+
+    # src-tauri/Cargo.toml - first occurrence of `version = "x.y.z"` under [package]
+    $cargoPath = Join-Path $RepoRoot "src-tauri/Cargo.toml"
+    $cargoRaw = Get-Content $cargoPath -Raw
+    $cargoRaw = $cargoRaw -replace '(?m)^version\s*=\s*"\d+\.\d+\.\d+"', "version = `"$newVersion`""
+    $cargoRaw = $cargoRaw.TrimEnd("`r","`n") + "`r`n"
+    Set-Content -Path $cargoPath -Value $cargoRaw -Encoding UTF8 -NoNewline
+
+    # src-tauri/tauri.conf.json
+    $tauriPath = Join-Path $RepoRoot "src-tauri/tauri.conf.json"
+    $tauriRaw = Get-Content $tauriPath -Raw
+    $tauriRaw = $tauriRaw -replace '"version"\s*:\s*"\d+\.\d+\.\d+"', "`"version`": `"$newVersion`""
+    $tauriRaw = $tauriRaw.TrimEnd("`r","`n") + "`r`n"
+    Set-Content -Path $tauriPath -Value $tauriRaw -Encoding UTF8 -NoNewline
+
+    Write-Host "  updated npm manifests, src-tauri/Cargo.toml, src-tauri/tauri.conf.json -> $newVersion" -ForegroundColor Green
+
+    # Keep Cargo.lock in sync so --locked checks don't fail after a bump
+    Write-Host "  updating Cargo.lock..." -ForegroundColor DarkGray
+    cargo update --manifest-path (Join-Path $RepoRoot "src-tauri/Cargo.toml") --workspace --offline
+    if ($LASTEXITCODE -ne 0) { throw "Cargo.lock version update failed" }
+  } catch {
+    foreach ($versionPath in $versionPaths) {
+      [System.IO.File]::WriteAllBytes($versionPath, $originalContents[$versionPath])
+    }
+    throw
+  }
 }
 
 # --- Version handling ---
@@ -151,15 +158,9 @@ if (-not $SkipChecks) {
   npm run typecheck
   if ($LASTEXITCODE -ne 0) { throw "typecheck failed" }
 
-  # lint is optional - only run if script exists (toolbox has no eslint by default)
-  $pkgJson = Get-Content (Join-Path $RepoRoot "package.json") -Raw | ConvertFrom-Json
-  if ($pkgJson.scripts.PSObject.Properties.Name -contains "lint") {
-    Write-Host "  npm run lint..." -ForegroundColor DarkGray
-    npm run lint
-    if ($LASTEXITCODE -ne 0) { throw "lint failed" }
-  } else {
-    Write-Host "  lint skipped (no lint script)" -ForegroundColor DarkGray
-  }
+  Write-Host "  npm run lint..." -ForegroundColor DarkGray
+  npm run lint
+  if ($LASTEXITCODE -ne 0) { throw "lint failed" }
 
   Write-Host "  npm run test..." -ForegroundColor DarkGray
   npm run test
@@ -182,12 +183,8 @@ if (-not $SkipChecks) {
   Write-Host 'Skipping validation (--SkipChecks)' -ForegroundColor Yellow
 }
 
-# --- Frontend build ---
-Write-Step "Building frontend"
-npm run build
-if ($LASTEXITCODE -ne 0) { throw "vite build failed" }
-
 # --- Tauri bundle ---
+# Tauri's beforeBuildCommand builds the frontend once.
 Write-Step 'Building Tauri bundle (this takes a while)'
 npm run tauri -- build
 if ($LASTEXITCODE -ne 0) { throw "tauri build failed" }

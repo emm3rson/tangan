@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
-import { Button, ProgressBar, Segmented } from '@/components/ui'
-import { DocumentIcon, FolderIcon, RotateCcwIcon, XIcon } from '@/components/ui/icons'
+import { Button, Segmented } from '@/components/ui'
+import { DocumentIcon, FolderIcon, RotateCcwIcon } from '@/components/ui/icons'
+import { BatchProgress } from '@/components/processing/BatchProgress'
 import { BeforeAfter, Completion } from '@/components/processing/Completion'
 import {
   DropZone,
@@ -20,6 +21,7 @@ import {
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
 import type { ToolDefinition } from '../types'
+import { appendUniqueByPath, getErrorMessage } from '../shared/file-utils'
 
 type Phase = 'empty' | 'editing' | 'processing' | 'done'
 
@@ -57,11 +59,7 @@ export function PdfOptimizer() {
     if (selected.length === 0) return
     const inspected = await desktop.inspectPdfsForOptimization(selected)
     if (inspected.length === 0) return
-    setFiles((prev) => {
-      const existing = new Set(prev.map((f) => f.path.toLowerCase()))
-      const fresh = inspected.filter((f) => !existing.has(f.path.toLowerCase()))
-      return [...prev, ...fresh]
-    })
+    setFiles((prev) => appendUniqueByPath(prev, inspected))
     setPhase('editing')
   }
 
@@ -150,11 +148,7 @@ export function PdfOptimizer() {
       setCurrentPercent(0)
       setProgress(0)
       setCancelRequested(false)
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -165,11 +159,7 @@ export function PdfOptimizer() {
       await desktop.cancelPdfOptimizationJob(jobIdRef.current)
     } catch (e) {
       setCancelRequested(false)
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -360,25 +350,15 @@ export function PdfOptimizer() {
         {phase !== 'processing' ? (
           <FileListHeader count={files.length} onAddMore={addFiles} onClear={reset} />
         ) : (
-          <div className="mb-3.5" role="status" aria-live="polite" aria-busy="true">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[13.5px] font-medium">
-                Processing {Math.min(completedFiles + 1, totalFiles)} of {totalFiles}
-              </span>
-              <span className="font-mono text-[12px] text-muted-foreground">{progress}%</span>
-            </div>
-            <ProgressBar value={progress} />
-            {currentFile && (
-              <p className="mt-2 font-mono text-[11.5px] text-muted-foreground truncate">
-                {currentFile} · {Math.round(currentPercent)}%
-              </p>
-            )}
-            <div className="mt-2.5 flex justify-end">
-              <Button variant="ghost" size="sm" icon={<XIcon size={14} />} disabled={cancelRequested} onClick={() => void cancel()}>
-                {cancelRequested ? 'Canceling…' : 'Cancel'}
-              </Button>
-            </div>
-          </div>
+          <BatchProgress
+            completedFiles={completedFiles}
+            totalFiles={totalFiles}
+            progress={progress}
+            currentFile={currentFile}
+            currentFilePercent={currentPercent}
+            cancelRequested={cancelRequested}
+            onCancel={() => void cancel()}
+          />
         )}
 
         {error && (
@@ -440,6 +420,5 @@ export const pdfOptimizerDefinition: ToolDefinition = {
   name: 'Optimize PDFs',
   description: 'Reduce PDF file size while preserving quality.',
   icon: DocumentIcon,
-  route: '/optimize-pdf',
   component: PdfOptimizer,
 }

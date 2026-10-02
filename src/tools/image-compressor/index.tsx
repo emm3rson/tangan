@@ -11,6 +11,5 @@ export const imageCompressorDefinition: ToolDefinition = {
   name: 'Compress Images',
   description: 'Reduce image file size while preserving visual quality.',
   icon: CompressIcon,
-  route: '/compress',
   component: ImageCompressor,
 }

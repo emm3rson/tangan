@@ -28,9 +28,9 @@ interface SettingsContextValue extends Settings {
   isDark: boolean
   setTheme: (theme: ThemeMode) => void
   chooseExportPath: () => Promise<string | null>
-  setToolPrefs: (
-    section: ToolSection,
-    values: Partial<NonNullable<ToolPrefs[ToolSection]>>
+  setToolPrefs: <Section extends ToolSection>(
+    section: Section,
+    values: Partial<NonNullable<ToolPrefs[Section]>>
   ) => void
 }
 
@@ -54,6 +54,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       return defaults
     }
   })
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
   const [systemDark, setSystemDark] = useState(
     () => matchMedia('(prefers-color-scheme: dark)').matches
@@ -77,7 +78,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [isDark])
 
   useEffect(() => {
+    let active = true
     void loadSettings().then((stored) => {
+      if (!active) return
       if (stored.theme || stored.exportPath || stored.tool) {
         setSettings((current) => ({
           ...current,
@@ -85,13 +88,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           tool: { ...current.tool, ...stored.tool },
         }))
       }
+      setSettingsLoaded(true)
     })
+    return () => {
+      active = false
+    }
   }, [])
 
   useEffect(() => {
+    if (!settingsLoaded) return
     localStorage.setItem(CACHE_KEY, JSON.stringify(settings))
     void saveSettings(settings)
-  }, [settings])
+  }, [settings, settingsLoaded])
 
   const value = useMemo<SettingsContextValue>(
     () => ({

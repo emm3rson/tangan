@@ -50,8 +50,8 @@ export interface GenerateLogoPackRequest { sourcePath: string; outputDirectory: 
 export interface LogoAssetDefinition { id: string; filename: string; width: number; height: number; format: 'png' | 'ico'; defaultEnabled: boolean }
 export interface GenerateLogoPackResult { packDirectory: string; batch: BatchResult }
 
-export interface PaletteColor { r: number; g: number; b: number; x: number; y: number }
 export interface RgbColor { r: number; g: number; b: number }
+export interface PaletteColor extends RgbColor { x: number; y: number }
 export interface ExtractColorPaletteRequest { sourcePath: string; targetCount: number }
 export interface ExtractColorPaletteResult {
   width: number
@@ -74,7 +74,8 @@ export interface ExportColorPaletteResult { outputPath: string }
 export type VideoOutputFormat = 'mp4' | 'webm'
 export type VideoQualityPreset = 'high' | 'balanced' | 'small'
 export type VideoResolutionPreset = 'original' | '1080p' | '720p' | '480p'
-export type VideoBatchStatus = 'completed' | 'canceled'
+export type BatchStatus = 'completed' | 'canceled'
+export type VideoBatchStatus = BatchStatus
 
 export interface VideoProcessRequest {
   files: string[]
@@ -84,25 +85,22 @@ export interface VideoProcessRequest {
   quality: VideoQualityPreset
   jobId: string
 }
-export interface VideoProcessingProgress {
+export interface SequentialProcessingProgress {
   jobId: string
   completedFiles: number
   totalFiles: number
   currentFile?: string
   currentFilePercent?: number
 }
+export type VideoProcessingProgress = SequentialProcessingProgress
 export type VideoProgressHandler = (progress: VideoProcessingProgress) => void
-export interface VideoBatchResult {
+export interface VideoBatchResult extends BatchResult {
   status: VideoBatchStatus
-  total: number
-  succeeded: number
-  failed: number
-  items: FileResult[]
 }
 
 export type PdfOptimizationPreset = 'lossless' | 'balanced' | 'smaller'
 export type PdfOptimizeOutcome = 'optimized' | 'alreadyOptimized' | 'failed' | 'canceled'
-export type PdfOptimizeBatchStatus = 'completed' | 'canceled'
+export type PdfOptimizeBatchStatus = BatchStatus
 
 export interface OptimizePdfsRequest {
   files: string[]
@@ -127,13 +125,7 @@ export interface OptimizePdfBatchResult {
   failed: number
   items: OptimizePdfFileResult[]
 }
-export interface PdfOptimizationProgress {
-  jobId: string
-  completedFiles: number
-  totalFiles: number
-  currentFile?: string
-  currentFilePercent?: number
-}
+export type PdfOptimizationProgress = SequentialProcessingProgress
 export type PdfOptimizeProgressHandler = (progress: PdfOptimizationProgress) => void
 
 export interface TauriAdapter {
@@ -152,7 +144,7 @@ export interface TauriAdapter {
   getLogoPresets(): Promise<LogoAssetDefinition[]>
   extractColorPalette(request: ExtractColorPaletteRequest): Promise<ExtractColorPaletteResult>
   exportColorPalette(request: ExportColorPaletteRequest): Promise<ExportColorPaletteResult>
-  pickFiles(mode: 'convert' | 'compress' | 'logo' | 'pdf' | 'batch' | 'video' | 'palette'): Promise<string[]>
+  pickFiles(mode: 'convert' | 'compress' | 'logo' | 'pdf' | 'video' | 'palette'): Promise<string[]>
   pickFolder(): Promise<string | null>
   openFolder(path: string): Promise<void>
   getVersion(): Promise<string>

@@ -1,4 +1,6 @@
-export interface Rgb { r: number; g: number; b: number }
+import type { RgbColor } from '@/services/tauri/contracts'
+
+export type Rgb = RgbColor
 
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))

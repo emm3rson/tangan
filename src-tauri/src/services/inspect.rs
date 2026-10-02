@@ -1,5 +1,4 @@
 use std::io::BufReader;
-use std::path::Path;
 
 use crate::models::InputFile;
 
@@ -15,8 +14,8 @@ pub fn inspect_paths(paths: Vec<String>) -> Vec<InputFile> {
     match std::fs::metadata(&path) {
       Ok(meta) if meta.is_dir() => out.extend(expand_directory(&path)),
       Ok(meta) if meta.is_file() => out.push(inspect_file(&path, meta.len())),
-      Ok(_) => out.push(invalid_file(&path, 0, "Not a regular file")),
-      Err(_) => out.push(invalid_file(&path, 0, "File not found")),
+      Ok(_) => out.push(InputFile::invalid(&path, 0, "Not a regular file")),
+      Err(_) => out.push(InputFile::invalid(&path, 0, "File not found")),
     }
   }
   out
@@ -49,7 +48,7 @@ fn expand_directory(path: &str) -> Vec<InputFile> {
 }
 
 fn inspect_file(path: &str, size: u64) -> InputFile {
-  let mut file = base_input(path, size);
+  let mut file = InputFile::new(path, size);
 
   if file.extension == "svg" {
     return inspect_svg(file, path);
@@ -140,35 +139,6 @@ fn inspect_svg(mut file: InputFile, path: &str) -> InputFile {
     }
   }
 
-  file
-}
-
-fn base_input(path: &str, size: u64) -> InputFile {
-  let name = Path::new(path)
-    .file_name()
-    .map(|name| name.to_string_lossy().into_owned())
-    .unwrap_or_else(|| path.to_string());
-  let extension = Path::new(path)
-    .extension()
-    .map(|ext| ext.to_string_lossy().to_lowercase())
-    .unwrap_or_default();
-  InputFile {
-    path: path.to_string(),
-    name,
-    extension,
-    size,
-    width: 0,
-    height: 0,
-    status: "invalid".into(),
-    duration: None,
-    error: None,
-  }
-}
-
-fn invalid_file(path: &str, size: u64, error: &str) -> InputFile {
-  let mut file = base_input(path, size);
-  file.status = "invalid".into();
-  file.error = Some(error.into());
   file
 }
 

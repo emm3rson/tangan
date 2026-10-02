@@ -11,6 +11,5 @@ export const imageConverterDefinition: ToolDefinition = {
   name: 'Convert Images',
   description: 'Convert PNG, JPG, WebP, and SVG to PNG, JPG, or WebP.',
   icon: ConvertIcon,
-  route: '/convert',
   component: ImageConverter,
 }

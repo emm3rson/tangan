@@ -30,6 +30,7 @@ import {
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
 import type { ToolDefinition } from '../types'
+import { getErrorMessage } from '../shared/file-utils'
 import { clamp, hexToRgb, hslString, hslToRgb, rgbString, rgbToHex, rgbToHsl } from './colors'
 import {
   clientToNormalized,
@@ -45,12 +46,6 @@ const DEFAULT_COLORS = 6
 
 type Phase = 'empty' | 'invalid' | 'extracting' | 'editing' | 'error'
 type InvalidReason = 'multiple' | 'unsupported'
-
-function messageOf(error: unknown): string {
-  return typeof error === 'object' && error !== null && 'message' in error
-    ? String((error as { message: unknown }).message)
-    : String(error)
-}
 
 function getContrastColor(rgb: { r: number; g: number; b: number }): '#000000' | '#FFFFFF' {
   const yiq = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
@@ -205,7 +200,7 @@ export function ColorPaletteExtractor() {
       setExportedPath(undefined)
       setPhase('editing')
     } catch (e) {
-      setError(messageOf(e))
+      setError(getErrorMessage(e))
       setPhase('error')
     }
   }
@@ -281,7 +276,7 @@ export function ColorPaletteExtractor() {
       setHoverLoupe(null)
       setExportedPath(undefined)
     } catch (e) {
-      setError(messageOf(e))
+      setError(getErrorMessage(e))
     } finally {
       setReExtracting(false)
     }
@@ -535,7 +530,7 @@ export function ColorPaletteExtractor() {
       })
       setExportedPath(exported.outputPath)
     } catch (e) {
-      setError(messageOf(e))
+      setError(getErrorMessage(e))
     } finally {
       setExporting(false)
     }
@@ -1240,6 +1235,5 @@ export const colorPaletteExtractorDefinition: ToolDefinition = {
   name: 'Extract Color Palette',
   description: 'Extract and refine a reusable palette from any image.',
   icon: PaletteIcon,
-  route: '/color-palette',
   component: ColorPaletteExtractor,
 }

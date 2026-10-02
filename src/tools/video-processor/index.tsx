@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
-import { Button, ProgressBar, Segmented } from '@/components/ui'
-import { FolderIcon, RotateCcwIcon, VideoIcon, XIcon } from '@/components/ui/icons'
+import { Button, Segmented } from '@/components/ui'
+import { FolderIcon, RotateCcwIcon, VideoIcon } from '@/components/ui/icons'
+import { BatchProgress } from '@/components/processing/BatchProgress'
 import { BeforeAfter, Completion } from '@/components/processing/Completion'
 import {
   DropZone,
@@ -20,6 +21,7 @@ import {
 } from '@/services/tauri'
 import { useSettings } from '@/app/providers/SettingsProvider'
 import type { ToolDefinition } from '../types'
+import { appendUniqueByPath, getErrorMessage } from '../shared/file-utils'
 
 type Phase = 'empty' | 'editing' | 'processing' | 'done'
 
@@ -59,13 +61,7 @@ export function VideoProcessor() {
     if (selected.length === 0) return
     const inspected = await desktop.inspectVideos(selected)
     if (inspected.length === 0) return
-    setFiles((prev) => {
-      const existingPaths = new Set(prev.map((file) => file.path.toLowerCase()))
-      const fresh = inspected.filter(
-        (file) => !existingPaths.has(file.path.toLowerCase())
-      )
-      return [...prev, ...fresh]
-    })
+    setFiles((prev) => appendUniqueByPath(prev, inspected))
     setPhase('editing')
   }
 
@@ -155,11 +151,7 @@ export function VideoProcessor() {
       setCurrentFile(undefined)
       setProgress(0)
       setCancelRequested(false)
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -170,11 +162,7 @@ export function VideoProcessor() {
       await desktop.cancelVideoJob(jobIdRef.current)
     } catch (e) {
       setCancelRequested(false)
-      setError(
-        typeof e === 'object' && e !== null && 'message' in e
-          ? String((e as { message: unknown }).message)
-          : String(e)
-      )
+      setError(getErrorMessage(e))
     }
   }
 
@@ -330,29 +318,13 @@ export function VideoProcessor() {
             onClear={reset}
           />
         ) : (
-          <div className="mb-3.5" role="status" aria-live="polite" aria-busy="true">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[13.5px] font-medium">
-                Processing {Math.min(completedFiles + 1, totalFiles)} of{' '}
-                {totalFiles}
-              </span>
-              <span className="font-mono text-[12px] text-muted-foreground">
-                {progress}%
-              </span>
-            </div>
-            <ProgressBar value={progress} />
-            <div className="mt-2.5 flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<XIcon size={14} />}
-                disabled={cancelRequested}
-                onClick={() => void cancel()}
-              >
-                {cancelRequested ? 'Canceling…' : 'Cancel'}
-              </Button>
-            </div>
-          </div>
+          <BatchProgress
+            completedFiles={completedFiles}
+            totalFiles={totalFiles}
+            progress={progress}
+            cancelRequested={cancelRequested}
+            onCancel={() => void cancel()}
+          />
         )}
 
         {error && (
@@ -469,6 +441,5 @@ export const videoProcessorDefinition: ToolDefinition = {
   name: 'Process Videos',
   description: 'Compress, resize, and convert videos to MP4 or WebM.',
   icon: VideoIcon,
-  route: '/video',
   component: VideoProcessor,
 }
