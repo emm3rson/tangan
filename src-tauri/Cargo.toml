@@ -1,6 +1,6 @@
 [package]
 name = "utility-desktop"
-version = "0.5.1"
+version = "0.5.2"
 description = "Local-first desktop utility toolbox"
 authors = ["Emmerson Mena"]
 edition = "2021"

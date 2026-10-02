@@ -2,7 +2,7 @@
 
 Outcome-focused history of completed releases and capabilities.
 
-## Unreleased
+## Release v0.5.2 - 2026-10-02
 
 ### Shared processing and reliable preferences
 
