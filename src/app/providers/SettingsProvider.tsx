@@ -40,6 +40,7 @@ const defaults: Settings = {
   tool: {},
 }
 
+// Keep the persisted key stable so the product rename preserves cached preferences.
 const CACHE_KEY = 'toolbox.settings'
 const SettingsContext = createContext<SettingsContextValue | null>(null)
 

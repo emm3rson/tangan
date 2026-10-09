@@ -48,5 +48,5 @@ pub fn run() {
       commands::cancel_pdf_optimization_job
     ])
     .run(tauri::generate_context!())
-    .expect("error while running Toolbox");
+    .expect("error while running Tangan");
 }

@@ -124,7 +124,7 @@ mod tests {
 
   fn temp_dir() -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-convert-test-{}-{}",
+      "tangan-convert-test-{}-{}",
       std::process::id(),
       COUNTER.fetch_add(1, Ordering::Relaxed)
     ));

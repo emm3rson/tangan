@@ -570,7 +570,7 @@ mod tests {
 
   fn temp_dir() -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-video-test-{}-{}",
+      "tangan-video-test-{}-{}",
       std::process::id(),
       COUNTER.fetch_add(1, AtomicOrdering::Relaxed)
     ));

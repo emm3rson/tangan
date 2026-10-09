@@ -2,6 +2,13 @@
 
 Outcome-focused history of completed releases and capabilities.
 
+## Release v0.5.3 - 2026-10-09
+
+### Tangan product identity
+
+- Renamed the app, window titles, build packages, installer branding, documentation, and PDF extraction messages to Tangan.
+- Preserved existing settings identifiers and engine configuration names so preferences and local processing keep their established behavior.
+
 ## Release v0.5.2 - 2026-10-02
 
 ### Shared processing and reliable preferences

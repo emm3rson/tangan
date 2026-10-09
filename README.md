@@ -1,10 +1,10 @@
-# Toolbox
+# Tangan
 
-Toolbox is a local-first Windows desktop utility application built with Tauri 2, Rust, and React. It brings together essential media conversion, compression, and extraction utilities into one unified interface where files never leave your machine.
+Tangan is a local-first Windows desktop utility application built with Tauri 2, Rust, and React. It brings together essential media conversion, compression, and extraction utilities into one unified interface where files never leave your machine.
 
 ## Core Capabilities
 
-Toolbox includes seven focused utilities:
+Tangan includes seven focused utilities:
 
 - **Image Converter**: Convert PNG, JPG, WebP, or SVG inputs to PNG, JPG, or WebP. Supports aspect-preserving resizing (fixed dimensions or percentage), lossy quality tuning, and lossless PNG optimization.
 - **Image Compressor**: Format-aware file size reduction. Applies multi-step lossless optimization via `oxipng` for PNG files, and calibrated quality encoding for JPG and WebP.

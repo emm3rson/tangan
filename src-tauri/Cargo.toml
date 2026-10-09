@@ -1,13 +1,13 @@
 [package]
-name = "utility-desktop"
-version = "0.5.2"
-description = "Local-first desktop utility toolbox"
+name = "tangan"
+version = "0.5.3"
+description = "Tangan local-first desktop utilities"
 authors = ["Emmerson Mena"]
 edition = "2021"
 license = "MIT"
 
 [lib]
-name = "utility_desktop_lib"
+name = "tangan_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

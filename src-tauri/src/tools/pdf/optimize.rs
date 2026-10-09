@@ -718,7 +718,7 @@ mod tests {
   #[test]
   fn partial_paths_are_unique() {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-pdf-optimize-test-{}-{}",
+      "tangan-pdf-optimize-test-{}-{}",
       std::process::id(),
       A32::new(0).fetch_add(1, Ordering::Relaxed)
     ));
@@ -764,7 +764,7 @@ mod tests {
   fn temp_dir() -> PathBuf {
     static COUNTER: A32 = A32::new(0);
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-pdf-optimize-gated-{}-{}",
+      "tangan-pdf-optimize-gated-{}-{}",
       std::process::id(),
       COUNTER.fetch_add(1, Ordering::Relaxed)
     ));

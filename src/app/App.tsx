@@ -25,7 +25,7 @@ export function App() {
         {route.view === 'launcher' ? (
           <div className="flex items-center gap-2 pl-1">
             <span className="text-[13.5px] font-semibold tracking-tight">
-              Toolbox
+              Tangan
             </span>
           </div>
         ) : (
@@ -35,7 +35,7 @@ export function App() {
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1.5 -ml-1 text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <ArrowLeft size={16} />
-              Toolbox
+              Tangan
             </button>
             <span className="text-border-strong">/</span>
             <span className="text-[13.5px] font-medium">

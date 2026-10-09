@@ -1,6 +1,6 @@
-# Toolbox project
+# Tangan project
 
-Toolbox is a local-first Windows desktop utility app. Users choose a tool, add
+Tangan is a local-first Windows desktop utility app. Users choose a tool, add
 files, adjust settings, and export. Processing stays on-device; outputs never
 overwrite source files, and filename collisions receive numbered suffixes.
 
@@ -23,6 +23,13 @@ and discard partial files. Image batches use at most four workers; PDFs and
 videos process sequentially to limit memory.
 
 ## Architecture and boundaries
+
+The product and build packages are named Tangan. The application identifier
+`com.emmersonmena.toolbox` and localStorage key `toolbox.settings` remain stable
+compatibility identifiers so existing native settings and cached preferences
+remain available. The `TOOLBOX_FFMPEG_DIR` and `TOOLBOX_QPDF_DIR` environment
+variables remain supported runtime configuration names. These identifiers are
+not display names.
 
 - React components own interaction state. Native processing goes through
   `src/services/tauri/`; `contracts.ts` and `src-tauri/src/models.rs` define the

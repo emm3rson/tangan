@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-  Build Toolbox and optionally bump version and launch NSIS installer.
+  Build Tangan and optionally bump version and launch NSIS installer.
 
 .DESCRIPTION
-  Windows-first helper for `utility-desktop` (Toolbox). Runs full validation
+  Windows-first helper for `tangan` (Tangan). Runs full validation
   (typecheck/test/cargo) then `tauri build` and launches the NSIS installer.
   Optional version bump supports both explicit --Version and semantic --Bump.
 

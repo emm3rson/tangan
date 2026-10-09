@@ -133,7 +133,7 @@ mod tests {
 
   fn temp_dir() -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-compress-test-{}-{}",
+      "tangan-compress-test-{}-{}",
       std::process::id(),
       COUNTER.fetch_add(1, Ordering::Relaxed)
     ));

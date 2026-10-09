@@ -96,7 +96,7 @@ pub fn extract_pdf_markdown(source_path: &Path) -> Result<ConvertedPdf, Processi
       ocr_pages.push(page_num);
       let reason = normalized_ocr_reason(page.ocr_reason.as_deref());
       let marker = format!(
-        "<!-- PDF page {} requires OCR: {} -->\n\n> Page {} was not converted because OCR is not included in Toolbox yet.",
+        "<!-- PDF page {} requires OCR: {} -->\n\n> Page {} was not converted because OCR is not included in Tangan yet.",
         page_num, reason, page_num
       );
       page_sections.push(marker);
@@ -105,7 +105,7 @@ pub fn extract_pdf_markdown(source_path: &Path) -> Result<ConvertedPdf, Processi
       if content.is_empty() {
         ocr_pages.push(page_num);
         let marker = format!(
-          "<!-- PDF page {} requires OCR: empty_content -->\n\n> Page {} was not converted because OCR is not included in Toolbox yet.",
+          "<!-- PDF page {} requires OCR: empty_content -->\n\n> Page {} was not converted because OCR is not included in Tangan yet.",
           page_num, page_num
         );
         page_sections.push(marker);
@@ -267,7 +267,7 @@ mod tests {
 
   fn temp_dir() -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-pdf-convert-test-{}-{}",
+      "tangan-pdf-convert-test-{}-{}",
       std::process::id(),
       COUNTER.fetch_add(1, Ordering::Relaxed)
     ));
@@ -387,7 +387,7 @@ mod tests {
     let dir = temp_dir();
     let out = temp_dir();
     let source = dir.join("document.pdf");
-    write_minimal_text_pdf(&source, "Hello Toolbox PDF");
+    write_minimal_text_pdf(&source, "Hello Tangan PDF");
 
     let result = convert_pdf_file(&source, &out);
     assert!(result.success, "unexpected failure: {:?}", result.error);
@@ -396,7 +396,7 @@ mod tests {
     assert!(Path::new(&output_path).exists());
 
     let content = std::fs::read_to_string(&output_path).unwrap();
-    assert!(content.contains("Hello Toolbox PDF"));
+    assert!(content.contains("Hello Tangan PDF"));
     assert!(result.warnings.is_none());
 
     std::fs::remove_dir_all(&dir).unwrap();
@@ -419,7 +419,7 @@ mod tests {
     assert!(content.contains("First page native text"));
     assert!(content.contains("<!-- PDF page 2 requires OCR:"));
     assert!(
-      content.contains("> Page 2 was not converted because OCR is not included in Toolbox yet.")
+      content.contains("> Page 2 was not converted because OCR is not included in Tangan yet.")
     );
 
     let warnings = result.warnings.expect("should have warning for page 2");

@@ -1,4 +1,4 @@
-# Toolbox UI rules
+# Tangan UI rules
 
 Keep the existing calm, minimal utility interface. This document describes
 shared conventions; components and `src/styles.css` own exact dimensions,

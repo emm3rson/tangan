@@ -49,7 +49,7 @@ mod tests {
   #[test]
   fn resolves_first_existing_candidate() {
     let dir = std::env::temp_dir().join(format!(
-      "toolbox-qpdf-resolve-test-{}-{}",
+      "tangan-qpdf-resolve-test-{}-{}",
       std::process::id(),
       99999
     ));

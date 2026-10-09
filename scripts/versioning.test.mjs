@@ -17,7 +17,7 @@ const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'))
 
 function fixture(t) {
-  const directory = mkdtempSync(join(tmpdir(), 'toolbox-versioning-'))
+  const directory = mkdtempSync(join(tmpdir(), 'tangan-versioning-'))
   assert.equal(dirname(directory), resolve(tmpdir()))
   t.after(() => rmSync(directory, { recursive: true, force: true }))
   mkdirSync(join(directory, 'scripts'))
@@ -70,8 +70,8 @@ test('version bumps synchronize manifests and retain dependency locks', (t) => {
     'utf8'
   ).replaceAll('\r\n', '\n')
   const expectedCargoLock = cargoLock.replace(
-    `name = "utility-desktop"\nversion = "${before.version}"`,
-    `name = "utility-desktop"\nversion = "${version}"`
+    `name = "tangan"\nversion = "${before.version}"`,
+    `name = "tangan"\nversion = "${version}"`
   )
   assert.ok(
     expectedCargoLock !== cargoLock,
