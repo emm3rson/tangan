@@ -6,3 +6,4 @@ src-tauri/resources/qpdf/
 *.log
 .DS_Store
 AGENTS.md
+/docs/

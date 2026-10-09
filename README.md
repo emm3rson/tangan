@@ -62,11 +62,27 @@ Tangan includes seven focused utilities:
 - **Native Core**: Tauri 2 with Rust. Handles file decoding, encoding, batch concurrency, and child process execution via typed IPC commands (`src-tauri/src/`).
 - **Engines & Crates**: `oxipng` for PNG optimization, `image` and `resvg` for image and vector processing, `pdf-inspector` for PDF text extraction, `kmeans_colors` for palette clustering, bundled `ffmpeg` for video transcoding, and bundled `qpdf` for PDF stream optimization.
 
-See [PROJECT.md](docs/PROJECT.md) for tool boundaries and maintenance,
-[UI_RULES.md](docs/UI_RULES.md) for interface conventions, and
-[RELEASE_RUNBOOK.md](docs/RELEASE_RUNBOOK.md) for release checks. The
-[build helper](scripts/README.md) can synchronize versions, validate, and package
-without launching the installer.
+## Build a release
+
+Stage the bundled engines with `npm run prepare:binaries`, then use the
+[build helper](scripts/README.md) to synchronize versions, run frontend and
+native checks, and package without launching the installer:
+
+```powershell
+npm run build:install -- -Bump patch -NoInstall
+```
+
+The per-user Windows installer is written to
+`src-tauri/target/release/bundle/nsis/`. To build without changing the version,
+use `npm run tauri -- build`.
+
+Before distributing, review bundled licenses and provenance, including the
+matching FFmpeg source/build provenance. Smoke-test the installed app for saved
+preferences, export collisions, cancellation, and bundled FFmpeg, qpdf, and PDF
+resources. Automated checks do not establish installed-app or visual acceptance.
+
+Record notable release outcomes in [CHANGELOG.md](CHANGELOG.md). Internal
+maintenance notes in `docs/` are kept locally and excluded from version control.
 
 ## License
 

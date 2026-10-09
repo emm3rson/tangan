@@ -29,8 +29,8 @@ formatting, Clippy, and tests. Tauri builds the frontend through
 Unless `-NoInstall` is passed, the helper launches the newest NSIS installer
 (with an MSI fallback if bundle targets change).
 
-See [RELEASE_RUNBOOK.md](../docs/RELEASE_RUNBOOK.md) for distribution checks and
-release ownership.
+See [Build a release](../README.md#build-a-release) for distribution checks and
+installer output locations.
 
 Run `npm run test:release` to verify version and lockfile updates in temporary
 copies. This requires PowerShell 7 and cached Cargo dependencies; it does not
