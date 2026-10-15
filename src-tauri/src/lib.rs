@@ -42,6 +42,8 @@ pub fn run() {
       commands::get_logo_presets,
       commands::extract_color_palette,
       commands::export_color_palette,
+      commands::preview_trace,
+      commands::trace_images,
       commands::process_videos,
       commands::cancel_video_job,
       commands::optimize_pdfs,

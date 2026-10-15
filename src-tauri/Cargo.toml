@@ -1,6 +1,6 @@
 [package]
 name = "tangan"
-version = "0.5.3"
+version = "0.6.0"
 description = "Tangan local-first desktop utilities"
 authors = ["Emmerson Mena"]
 edition = "2021"
@@ -32,6 +32,8 @@ fontdb = "0.24"
 kmeans_colors = { version = "0.7", default-features = false, features = ["palette_color"] }
 palette = "0.7"
 base64 = "0.22"
+vtracer = "=0.6.5"
+visioncortex = "=0.8.10"
 
 [dev-dependencies]
 lopdf = "0.42"

@@ -26,6 +26,17 @@ export const ConvertIcon = (p: IconProps) => (
   </Base>
 )
 
+export const TraceIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M4 19 9 5l4 10 3-7 4 11" />
+    <circle cx="4" cy="19" r="1" fill="currentColor" />
+    <circle cx="9" cy="5" r="1" fill="currentColor" />
+    <circle cx="13" cy="15" r="1" fill="currentColor" />
+    <circle cx="16" cy="8" r="1" fill="currentColor" />
+    <circle cx="20" cy="19" r="1" fill="currentColor" />
+  </Base>
+)
+
 export const CompressIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M12 3v6M12 9l-2.5-2.5M12 9l2.5-2.5M12 21v-6M12 15l-2.5 2.5M12 15l2.5 2.5M4 12h16" />

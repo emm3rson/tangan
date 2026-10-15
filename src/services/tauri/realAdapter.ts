@@ -16,6 +16,7 @@ import type {
   ProgressHandler,
   SequentialProcessingProgress,
   TauriAdapter,
+  TracePreviewResult,
   VideoBatchResult
 } from './contracts'
 
@@ -71,7 +72,7 @@ export const realAdapter: TauriAdapter = {
         ? PDF_FILTERS
         : mode === 'video'
           ? VIDEO_FILTERS
-          : mode === 'compress'
+          : mode === 'compress' || mode === 'trace'
             ? COMPRESS_FILTERS
             : IMAGE_FILTERS
     const selected = await open({
@@ -105,6 +106,12 @@ export const realAdapter: TauriAdapter = {
   },
   compressImages(request, onProgress) {
     return runWithProgress<BatchResult>('compress_images', request, onProgress)
+  },
+  previewTrace(request) {
+    return invoke<TracePreviewResult>('preview_trace', { request })
+  },
+  traceImages(request, onProgress) {
+    return runWithProgress<BatchResult>('trace_images', request, onProgress)
   },
   convertPdfs(request, onProgress) {
     return runWithProgress<BatchResult>('convert_pdfs', request, onProgress)

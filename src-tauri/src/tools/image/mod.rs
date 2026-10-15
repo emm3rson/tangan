@@ -7,6 +7,7 @@ pub mod optimize_png;
 pub mod palette;
 pub mod resize;
 pub mod svg;
+pub mod trace;
 pub mod webp;
 
 /// Shared image dimension guards used by both raster decode and SVG render.

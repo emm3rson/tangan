@@ -48,16 +48,24 @@ export function Segmented<T extends string>({
   value,
   onChange,
   options,
+  ariaLabel,
 }: {
   value: T
   onChange: (value: T) => void
   options: { value: T; label: string }[]
+  ariaLabel?: string
 }) {
   return (
-    <div className="inline-flex rounded-[var(--radius-sm)] bg-muted p-0.5 gap-0.5">
+    <div
+      role={ariaLabel ? 'group' : undefined}
+      aria-label={ariaLabel}
+      className="inline-flex rounded-[var(--radius-sm)] bg-muted p-0.5 gap-0.5"
+    >
       {options.map((option) => (
         <button
           key={option.value}
+          type="button"
+          aria-pressed={option.value === value}
           onClick={() => onChange(option.value)}
           className={cx(
             'h-8 px-3.5 text-[12px] font-medium rounded-[5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',

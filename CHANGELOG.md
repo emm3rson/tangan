@@ -2,6 +2,14 @@
 
 Outcome-focused history of completed releases and capabilities.
 
+## Release v0.6.0 - 2026-10-15
+
+### Raster artwork to SVG
+
+- Added a separate Trace to SVG utility for local PNG, JPG, and WebP vectorization, with color and black-and-white modes, detail presets, and curve smoothing.
+- Added a source-to-trace comparison preview and batch SVG export with numbered filenames that preserve existing files.
+- Preserved transparent cutouts and JPEG orientation, with explicit guidance for partially transparent pixels and images above the tracing size limit.
+
 ## Release v0.5.3 - 2026-10-09
 
 ### Tangan product identity

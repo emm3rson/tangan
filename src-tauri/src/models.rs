@@ -431,6 +431,55 @@ pub struct ExportColorPaletteResult {
   pub output_path: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TraceColorMode {
+  Color,
+  Binary,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TraceDetail {
+  Low,
+  Balanced,
+  High,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceOptions {
+  pub color_mode: TraceColorMode,
+  pub detail: TraceDetail,
+  pub smooth: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewTraceRequest {
+  pub source_path: String,
+  #[serde(flatten)]
+  pub options: TraceOptions,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TracePreviewResult {
+  pub svg: String,
+  pub width: u32,
+  pub height: u32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceImagesRequest {
+  pub files: Vec<String>,
+  pub output_directory: String,
+  #[serde(flatten)]
+  pub options: TraceOptions,
+  pub job_id: String,
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

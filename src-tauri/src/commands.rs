@@ -7,8 +7,9 @@ use crate::models::{
   BatchResult, CompressImagesRequest, ConvertImagesRequest, ConvertPdfsRequest,
   ExportColorPaletteRequest, ExportColorPaletteResult, ExtractColorPaletteRequest,
   ExtractColorPaletteResult, GenerateLogoPackRequest, GenerateLogoPackResult, InputFile,
-  LogoAssetDefinition, OptimizePdfBatchResult, OptimizePdfsRequest, ProcessVideosRequest,
-  ProcessingProgress, VideoBatchResult,
+  LogoAssetDefinition, OptimizePdfBatchResult, OptimizePdfsRequest, PreviewTraceRequest,
+  ProcessVideosRequest, ProcessingProgress, TraceImagesRequest, TracePreviewResult,
+  VideoBatchResult,
 };
 use crate::services;
 use crate::tools;
@@ -58,6 +59,36 @@ pub async fn export_color_palette(
   })
   .await
   .map_err(|error| ProcessingErrorDto::processing_failed(format!("Export task failed: {error}")))?
+  .map_err(ProcessingErrorDto::from)
+}
+
+#[tauri::command]
+pub async fn preview_trace(
+  request: PreviewTraceRequest,
+) -> Result<TracePreviewResult, ProcessingErrorDto> {
+  let source = PathBuf::from(&request.source_path);
+  let options = request.options;
+  tauri::async_runtime::spawn_blocking(move || tools::image::trace::preview(&source, options))
+    .await
+    .map_err(|error| {
+      ProcessingErrorDto::processing_failed(format!("Trace preview failed: {error}"))
+    })?
+    .map_err(ProcessingErrorDto::from)
+}
+
+#[tauri::command]
+pub async fn trace_images(
+  app: tauri::AppHandle,
+  request: TraceImagesRequest,
+) -> Result<BatchResult, ProcessingErrorDto> {
+  let job_id = request.job_id.clone();
+  tauri::async_runtime::spawn_blocking(move || {
+    tools::image::trace::run_batch(&request, move |completed, total, filename| {
+      emit_processing_progress(&app, &job_id, completed, total, filename)
+    })
+  })
+  .await
+  .map_err(|error| ProcessingErrorDto::processing_failed(format!("Trace export failed: {error}")))?
   .map_err(ProcessingErrorDto::from)
 }
 

@@ -4,9 +4,10 @@ Tangan is a local-first Windows desktop utility application built with Tauri 2, 
 
 ## Core Capabilities
 
-Tangan includes seven focused utilities:
+Tangan includes eight focused utilities:
 
 - **Image Converter**: Convert PNG, JPG, WebP, or SVG inputs to PNG, JPG, or WebP. Supports aspect-preserving resizing (fixed dimensions or percentage), lossy quality tuning, and lossless PNG optimization.
+- **Trace to SVG**: Turn PNG, JPG, and WebP artwork into SVG paths locally with VTracer. Compare a selected image with its trace before batch export, with color or black-and-white output, detail presets, and optional curve smoothing. Best for logos, icons, and illustrations; photographs become stylized artwork. Inputs are limited to 4 million pixels; resize larger images with Convert Images first.
 - **Image Compressor**: Format-aware file size reduction. Applies multi-step lossless optimization via `oxipng` for PNG files, and calibrated quality encoding for JPG and WebP.
 - **Web Logo Pack**: Generates a standard web asset pack from a single square raster image or vector SVG. Produces multi-resolution `favicon.ico` (16, 32, 48 px), standard PNG favicons (16x16, 32x32, 192x192, 512x512), and `apple-touch-icon.png`, accompanied by a ready-to-paste HTML snippet.
 - **PDF to Markdown**: Fast offline text and structure extraction from PDF documents to Markdown via `pdf-inspector`, with explicit markers for pages requiring OCR.
@@ -60,7 +61,7 @@ Tangan includes seven focused utilities:
 
 - **Frontend**: React 19, TypeScript 5.9, Vite, and Tailwind CSS. The frontend manages user interaction, queue presentation, and tool configuration.
 - **Native Core**: Tauri 2 with Rust. Handles file decoding, encoding, batch concurrency, and child process execution via typed IPC commands (`src-tauri/src/`).
-- **Engines & Crates**: `oxipng` for PNG optimization, `image` and `resvg` for image and vector processing, `pdf-inspector` for PDF text extraction, `kmeans_colors` for palette clustering, bundled `ffmpeg` for video transcoding, and bundled `qpdf` for PDF stream optimization.
+- **Engines & Crates**: `oxipng` for PNG optimization, `image` and `resvg` for image and vector processing, `vtracer` for raster tracing, `pdf-inspector` for PDF text extraction, `kmeans_colors` for palette clustering, bundled `ffmpeg` for video transcoding, and bundled `qpdf` for PDF stream optimization.
 
 ## Build a release
 

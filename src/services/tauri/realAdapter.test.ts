@@ -20,6 +20,15 @@ beforeEach(() => {
 
 const jobs = [
   {
+    command: 'trace_images',
+    event: 'processing-progress',
+    run: (progress?: () => void) =>
+      realAdapter.traceImages(
+        { files: ['logo.png'], outputDirectory: 'C:\\out', colorMode: 'color', detail: 'balanced', smooth: true },
+        progress
+      )
+  },
+  {
     command: 'convert_images',
     event: 'processing-progress',
     run: (progress?: () => void) =>
@@ -145,6 +154,7 @@ describe('file picker', () => {
   it.each([
     ['convert', true, ['png', 'jpg', 'jpeg', 'webp', 'svg']],
     ['compress', true, ['png', 'jpg', 'jpeg', 'webp']],
+    ['trace', true, ['png', 'jpg', 'jpeg', 'webp']],
     ['logo', false, ['png', 'jpg', 'jpeg', 'webp', 'svg']],
     ['palette', false, ['png', 'jpg', 'jpeg', 'webp', 'svg']],
     ['pdf', true, ['pdf']],
@@ -166,5 +176,16 @@ describe('file picker', () => {
     native.open.mockResolvedValue(null)
     expect(await realAdapter.pickFiles('logo')).toEqual([])
     expect(await realAdapter.pickFiles('pdf')).toEqual([])
+  })
+})
+
+describe('trace preview', () => {
+  it('passes tracing options without writing an output or subscribing to progress', async () => {
+    const request = { sourcePath: 'logo.png', colorMode: 'binary' as const, detail: 'high' as const, smooth: false }
+    const result = { svg: '<svg/>', width: 64, height: 64 }
+    native.invoke.mockResolvedValue(result)
+    expect(await realAdapter.previewTrace(request)).toEqual(result)
+    expect(native.invoke).toHaveBeenCalledWith('preview_trace', { request })
+    expect(native.listen).not.toHaveBeenCalled()
   })
 })

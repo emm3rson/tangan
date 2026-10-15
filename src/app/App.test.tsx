@@ -10,6 +10,16 @@ beforeEach(() => {
 })
 
 describe('App', () => {
+  it('opens Trace to SVG as a separate utility from Convert Images', async () => {
+    renderWithProviders(<App />)
+
+    expect(screen.getByRole('button', { name: /Convert Images/ })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Trace to SVG/ }))
+
+    expect(screen.getByText('Drop images here')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Trace to SVG' })).toBeInTheDocument()
+  })
+
   it('keeps theme and settings controls in the navigation bar without a persistent version', async () => {
     mockTauri.getVersion.mockResolvedValue('0.4.0')
 

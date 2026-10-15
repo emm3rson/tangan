@@ -45,6 +45,19 @@ export interface CompressImagesRequest {
   pngLevel?: PngOptimizationLevel
   resize: ResizeOptions
 }
+export type TraceColorMode = 'color' | 'binary'
+export type TraceDetail = 'low' | 'balanced' | 'high'
+export interface TraceOptions {
+  colorMode: TraceColorMode
+  detail: TraceDetail
+  smooth: boolean
+}
+export interface PreviewTraceRequest extends TraceOptions { sourcePath: string }
+export interface TracePreviewResult { svg: string; width: number; height: number }
+export interface TraceImagesRequest extends TraceOptions {
+  files: string[]
+  outputDirectory: string
+}
 export interface ConvertPdfsRequest { files: string[]; outputDirectory: string; jobId?: string }
 export interface GenerateLogoPackRequest { sourcePath: string; outputDirectory: string; assetIds: string[] }
 export interface LogoAssetDefinition { id: string; filename: string; width: number; height: number; format: 'png' | 'ico'; defaultEnabled: boolean }
@@ -135,6 +148,8 @@ export interface TauriAdapter {
   inspectVideos(paths: string[]): Promise<InputFile[]>
   convertImages(request: ConvertImagesRequest, onProgress?: ProgressHandler): Promise<BatchResult>
   compressImages(request: CompressImagesRequest, onProgress?: ProgressHandler): Promise<BatchResult>
+  previewTrace(request: PreviewTraceRequest): Promise<TracePreviewResult>
+  traceImages(request: TraceImagesRequest, onProgress?: ProgressHandler): Promise<BatchResult>
   convertPdfs(request: ConvertPdfsRequest, onProgress?: ProgressHandler): Promise<BatchResult>
   generateLogoPack(request: GenerateLogoPackRequest, onProgress?: ProgressHandler): Promise<GenerateLogoPackResult>
   processVideos(request: VideoProcessRequest, onProgress?: VideoProgressHandler): Promise<VideoBatchResult>
@@ -144,7 +159,7 @@ export interface TauriAdapter {
   getLogoPresets(): Promise<LogoAssetDefinition[]>
   extractColorPalette(request: ExtractColorPaletteRequest): Promise<ExtractColorPaletteResult>
   exportColorPalette(request: ExportColorPaletteRequest): Promise<ExportColorPaletteResult>
-  pickFiles(mode: 'convert' | 'compress' | 'logo' | 'pdf' | 'video' | 'palette'): Promise<string[]>
+  pickFiles(mode: 'convert' | 'compress' | 'trace' | 'logo' | 'pdf' | 'video' | 'palette'): Promise<string[]>
   pickFolder(): Promise<string | null>
   openFolder(path: string): Promise<void>
   getVersion(): Promise<string>

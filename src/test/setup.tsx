@@ -15,6 +15,8 @@ const { mockDesktop } = vi.hoisted(() => {
     inspectVideos: vi.fn(),
     convertImages: vi.fn(),
     compressImages: vi.fn(),
+    previewTrace: vi.fn(),
+    traceImages: vi.fn(),
     convertPdfs: vi.fn(),
     generateLogoPack: vi.fn(),
     processVideos: vi.fn(),
@@ -71,6 +73,12 @@ export function resetMockTauri(): void {
   mockTauri.inspectVideos.mockReset().mockResolvedValue([])
   mockTauri.convertImages.mockReset().mockResolvedValue(emptyBatch)
   mockTauri.compressImages.mockReset().mockResolvedValue(emptyBatch)
+  mockTauri.previewTrace.mockReset().mockResolvedValue({
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0h100v100H0z"/></svg>',
+    width: 100,
+    height: 100,
+  })
+  mockTauri.traceImages.mockReset().mockResolvedValue(emptyBatch)
   mockTauri.convertPdfs.mockReset().mockResolvedValue(emptyBatch)
   mockTauri.generateLogoPack.mockReset().mockResolvedValue({
     packDirectory: 'C:\\out\\web-pack',
